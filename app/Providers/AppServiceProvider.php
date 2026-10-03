@@ -1,4 +1,5 @@
 <?php
+
 // app/Providers/AppServiceProvider.php
 
 namespace App\Providers;
@@ -46,7 +47,7 @@ class AppServiceProvider extends ServiceProvider
             $email = (string) $request->input('email');
 
             return Limit::perMinute(5)
-                ->by($request->ip() . '|' . strtolower($email))
+                ->by($request->ip().'|'.strtolower($email))
                 ->response(function (Request $request, array $headers) {
                     return response()->json([
                         'message' => 'Too many login attempts. Please try again later.',

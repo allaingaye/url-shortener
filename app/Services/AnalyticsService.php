@@ -1,4 +1,5 @@
 <?php
+
 // app/Services/AnalyticsService.php
 
 namespace App\Services;
@@ -19,10 +20,10 @@ class AnalyticsService
     /**
      * Record a single click event.
      *
-     * @param  Url     $url        The URL that was hit.
-     * @param  string  $ip         Client IP (v4 or v6).
+     * @param  Url  $url  The URL that was hit.
+     * @param  string  $ip  Client IP (v4 or v6).
      * @param  string  $userAgent  Raw User-Agent header value.
-     * @param  ?string $referer    Raw Referer header value (may be null).
+     * @param  ?string  $referer  Raw Referer header value (may be null).
      */
     public function record(
         Url $url,
@@ -33,14 +34,14 @@ class AnalyticsService
         $agent = $this->parseUserAgent($userAgent);
 
         return Click::create([
-            'url_id'     => $url->id,
+            'url_id' => $url->id,
             'ip_address' => $ip,
             'user_agent' => mb_substr($userAgent, 0, 512),
-            'referer'    => $referer ? mb_substr($referer, 0, 2048) : null,
-            'device'     => $agent['device'],
-            'browser'    => $agent['browser'],
-            'platform'   => $agent['platform'],
-            'country'    => null, // populated later (GeoIP)
+            'referer' => $referer ? mb_substr($referer, 0, 2048) : null,
+            'device' => $agent['device'],
+            'browser' => $agent['browser'],
+            'platform' => $agent['platform'],
+            'country' => null, // populated later (GeoIP)
         ]);
     }
 
@@ -55,12 +56,12 @@ class AnalyticsService
             return ['device' => null, 'browser' => null, 'platform' => null];
         }
 
-        $agent = new Agent();
+        $agent = new Agent;
         $agent->setUserAgent($userAgent);
 
         return [
-            'device'   => $this->detectDevice($agent),
-            'browser'  => $agent->browser()  ?: null,
+            'device' => $this->detectDevice($agent),
+            'browser' => $agent->browser() ?: null,
             'platform' => $agent->platform() ?: null,
         ];
     }
@@ -71,11 +72,11 @@ class AnalyticsService
     private function detectDevice(Agent $agent): ?string
     {
         return match (true) {
-            $agent->isRobot()  => 'bot',
+            $agent->isRobot() => 'bot',
             $agent->isTablet() => 'tablet',
             $agent->isMobile() => 'mobile',
             $agent->isDesktop() => 'desktop',
-            default             => null,
+            default => null,
         };
     }
 }

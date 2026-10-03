@@ -1,4 +1,5 @@
 <?php
+
 // app/Http/Controllers/RedirectController.php
 
 namespace App\Http\Controllers;
@@ -29,10 +30,10 @@ class RedirectController extends Controller
 
         // 2. Detailed click event — currently synchronous; queued in Phase 7.
         $this->analytics->record(
-            url:       $url,
-            ip:        $request->ip() ?? '0.0.0.0',
+            url: $url,
+            ip: $request->ip() ?? '0.0.0.0',
             userAgent: (string) $request->userAgent(),
-            referer:   $request->header('referer'),
+            referer: $request->header('referer'),
         );
 
         // 3. Send the visitor on their way

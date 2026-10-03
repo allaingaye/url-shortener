@@ -1,4 +1,5 @@
 <?php
+
 // database/factories/UrlFactory.php
 
 namespace Database\Factories;
@@ -12,12 +13,12 @@ class UrlFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id'      => null,
+            'user_id' => null,
             'original_url' => $this->faker->url(),
-            'short_code'   => Str::random(7),
+            'short_code' => Str::random(7),
             'custom_alias' => null,
-            'expires_at'   => null,
-            'is_active'    => true,
+            'expires_at' => null,
+            'is_active' => true,
             'clicks_count' => 0,
         ];
     }

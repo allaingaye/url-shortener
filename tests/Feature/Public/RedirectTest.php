@@ -1,4 +1,5 @@
 <?php
+
 // tests/Feature/Public/RedirectTest.php
 
 use App\Models\Url;
@@ -6,7 +7,7 @@ use App\Models\Url;
 it('redirects a short code to the original URL', function () {
     $url = Url::factory()->create([
         'original_url' => 'https://laravel.com',
-        'short_code'   => 'test123',
+        'short_code' => 'test123',
     ]);
 
     $this->get('/test123')

@@ -1,4 +1,5 @@
 <?php
+
 // app/Http/Requests/UpdateUrlRequest.php
 
 namespace App\Http\Requests;
@@ -42,18 +43,18 @@ class UpdateUrlRequest extends FormRequest
         return [
             'original_url' => 'URL',
             'custom_alias' => 'custom alias',
-            'expires_at'   => 'expiration date',
-            'is_active'    => 'active flag',
+            'expires_at' => 'expiration date',
+            'is_active' => 'active flag',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'original_url.url'    => 'The :attribute must be a valid URL (e.g. https://example.com).',
-            'custom_alias.regex'  => 'The :attribute may only contain letters, numbers, hyphens, and underscores.',
+            'original_url.url' => 'The :attribute must be a valid URL (e.g. https://example.com).',
+            'custom_alias.regex' => 'The :attribute may only contain letters, numbers, hyphens, and underscores.',
             'custom_alias.not_in' => 'The :attribute is reserved and cannot be used.',
-            'expires_at.after'    => 'The :attribute must be in the future.',
+            'expires_at.after' => 'The :attribute must be in the future.',
         ];
     }
 }

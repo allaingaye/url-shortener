@@ -1,4 +1,5 @@
 <?php
+
 // routes/web.php
 
 use App\Http\Controllers\RedirectController;

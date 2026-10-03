@@ -1,4 +1,5 @@
 <?php
+
 // tests/Feature/Api/UrlOwnershipTest.php
 
 use App\Models\Url;
@@ -6,7 +7,7 @@ use App\Models\User;
 
 beforeEach(function () {
     $this->jane = User::factory()->create(['email' => 'jane@example.com']);
-    $this->bob  = User::factory()->create(['email' => 'bob@example.com']);
+    $this->bob = User::factory()->create(['email' => 'bob@example.com']);
 });
 
 // ─── CREATE ──────────────────────────────────────────────

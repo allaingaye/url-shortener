@@ -1,4 +1,5 @@
 <?php
+
 // routes/api.php
 
 use App\Http\Controllers\Api\AuthController;
@@ -33,7 +34,7 @@ Route::prefix('v1')->group(function () {
 
         Route::middleware(['auth:sanctum', 'throttle:api-user'])->group(function () {
             Route::post('logout', [AuthController::class, 'logout'])->name('auth.logout');
-            Route::get('me',      [AuthController::class, 'me'])->name('auth.me');
+            Route::get('me', [AuthController::class, 'me'])->name('auth.me');
         });
     });
 
@@ -44,10 +45,10 @@ Route::prefix('v1')->group(function () {
 
     // ── Authenticated: manage owned URLs (user-throttled) ──
     Route::middleware(['auth:sanctum', 'throttle:api-user'])->group(function () {
-        Route::get('urls',             [UrlController::class, 'index'])->name('urls.index');
+        Route::get('urls', [UrlController::class, 'index'])->name('urls.index');
         Route::get('urls/{url}/stats', UrlStatsController::class)->name('urls.stats');
-        Route::get('urls/{url}',       [UrlController::class, 'show'])->name('urls.show');
-        Route::patch('urls/{url}',     [UrlController::class, 'update'])->name('urls.update');
-        Route::delete('urls/{url}',    [UrlController::class, 'destroy'])->name('urls.destroy');
+        Route::get('urls/{url}', [UrlController::class, 'show'])->name('urls.show');
+        Route::patch('urls/{url}', [UrlController::class, 'update'])->name('urls.update');
+        Route::delete('urls/{url}', [UrlController::class, 'destroy'])->name('urls.destroy');
     });
 });

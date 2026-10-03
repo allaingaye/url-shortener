@@ -1,4 +1,5 @@
 <?php
+
 // tests/Feature/Api/RateLimitingTest.php
 
 use App\Models\Url;
@@ -13,40 +14,40 @@ beforeEach(function () {
 
 it('throttles login after 5 attempts', function () {
     User::factory()->create([
-        'email'    => 'jane@example.com',
+        'email' => 'jane@example.com',
         'password' => bcrypt('secret123'),
     ]);
 
     // 5 attempts allowed
     for ($i = 0; $i < 5; $i++) {
         $this->postJson('/api/v1/auth/login', [
-            'email'    => 'jane@example.com',
+            'email' => 'jane@example.com',
             'password' => 'wrong',
         ])->assertUnprocessable();
     }
 
     // 6th is rate-limited
     $this->postJson('/api/v1/auth/login', [
-        'email'    => 'jane@example.com',
+        'email' => 'jane@example.com',
         'password' => 'wrong',
     ])->assertStatus(429)
-      ->assertJsonPath('message', 'Too many login attempts. Please try again later.');
+        ->assertJsonPath('message', 'Too many login attempts. Please try again later.');
 });
 
 it('throttles registration after 5 attempts', function () {
     for ($i = 0; $i < 5; $i++) {
         $this->postJson('/api/v1/auth/register', [
-            'name'                  => "User {$i}",
-            'email'                 => "user{$i}@example.com",
-            'password'              => 'secret123',
+            'name' => "User {$i}",
+            'email' => "user{$i}@example.com",
+            'password' => 'secret123',
             'password_confirmation' => 'secret123',
         ])->assertCreated();
     }
 
     $this->postJson('/api/v1/auth/register', [
-        'name'                  => 'Blocked',
-        'email'                 => 'blocked@example.com',
-        'password'              => 'secret123',
+        'name' => 'Blocked',
+        'email' => 'blocked@example.com',
+        'password' => 'secret123',
         'password_confirmation' => 'secret123',
     ])->assertStatus(429);
 });
@@ -68,13 +69,13 @@ it('includes retry-after header on 429', function () {
 
     for ($i = 0; $i < 5; $i++) {
         $this->postJson('/api/v1/auth/login', [
-            'email'    => 'jane@example.com',
+            'email' => 'jane@example.com',
             'password' => 'x',
         ]);
     }
 
     $response = $this->postJson('/api/v1/auth/login', [
-        'email'    => 'jane@example.com',
+        'email' => 'jane@example.com',
         'password' => 'x',
     ]);
 

@@ -1,4 +1,5 @@
 <?php
+
 // app/Http/Requests/StoreUrlRequest.php
 
 namespace App\Http\Requests;
@@ -84,7 +85,7 @@ class StoreUrlRequest extends FormRequest
         return [
             'original_url' => 'URL',
             'custom_alias' => 'custom alias',
-            'expires_at'   => 'expiration date',
+            'expires_at' => 'expiration date',
         ];
     }
 
@@ -96,10 +97,10 @@ class StoreUrlRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'original_url.url'         => 'The :attribute must be a valid URL (e.g. https://example.com).',
-            'custom_alias.regex'       => 'The :attribute may only contain letters, numbers, hyphens, and underscores.',
-            'custom_alias.not_in'      => 'The :attribute is reserved and cannot be used.',
-            'expires_at.after'         => 'The :attribute must be in the future.',
+            'original_url.url' => 'The :attribute must be a valid URL (e.g. https://example.com).',
+            'custom_alias.regex' => 'The :attribute may only contain letters, numbers, hyphens, and underscores.',
+            'custom_alias.not_in' => 'The :attribute is reserved and cannot be used.',
+            'expires_at.after' => 'The :attribute must be in the future.',
         ];
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 // app/Services/ShortCodeGenerator.php
 
 namespace App\Services;
@@ -43,7 +44,7 @@ class ShortCodeGenerator
         }
 
         throw new RuntimeException(
-            'Unable to generate a unique short code after ' . self::MAX_ATTEMPTS . ' attempts.'
+            'Unable to generate a unique short code after '.self::MAX_ATTEMPTS.' attempts.'
         );
     }
 
@@ -55,8 +56,8 @@ class ShortCodeGenerator
     private function randomCode(): string
     {
         $alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        $max      = strlen($alphabet) - 1;
-        $code     = '';
+        $max = strlen($alphabet) - 1;
+        $code = '';
 
         for ($i = 0; $i < self::CODE_LENGTH; $i++) {
             $code .= $alphabet[random_int(0, $max)];

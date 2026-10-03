@@ -1,4 +1,5 @@
 <?php
+
 // app/Http/Controllers/Api/UrlController.php
 
 namespace App\Http\Controllers\Api;
@@ -107,9 +108,9 @@ class UrlController extends Controller
         // ── Search: matches original_url OR short_code OR custom_alias ──
         if ($search = $request->string('search')->trim()->toString()) {
             $query->where(function ($q) use ($search) {
-                $q->where('original_url',  'like', "%{$search}%")
-                  ->orWhere('short_code',   'like', "%{$search}%")
-                  ->orWhere('custom_alias', 'like', "%{$search}%");
+                $q->where('original_url', 'like', "%{$search}%")
+                    ->orWhere('short_code', 'like', "%{$search}%")
+                    ->orWhere('custom_alias', 'like', "%{$search}%");
             });
         }
 
@@ -123,20 +124,20 @@ class UrlController extends Controller
             if ($request->boolean('expired')) {
                 // Only expired URLs
                 $query->whereNotNull('expires_at')
-                      ->where('expires_at', '<', now());
+                    ->where('expires_at', '<', now());
             } else {
                 // Only unexpired (including no-expiry)
                 $query->where(function ($q) {
                     $q->whereNull('expires_at')
-                      ->orWhere('expires_at', '>', now());
+                        ->orWhere('expires_at', '>', now());
                 });
             }
         }
 
         // ── Sorting: whitelist columns to prevent SQL injection ──
         $allowedSorts = ['created_at', 'clicks_count', 'original_url'];
-        $sortBy  = $request->string('sort_by')->toString();
-        $sortBy  = in_array($sortBy, $allowedSorts, true) ? $sortBy : 'created_at';
+        $sortBy = $request->string('sort_by')->toString();
+        $sortBy = in_array($sortBy, $allowedSorts, true) ? $sortBy : 'created_at';
 
         $sortDir = strtolower($request->string('sort_dir')->toString());
         $sortDir = in_array($sortDir, ['asc', 'desc'], true) ? $sortDir : 'desc';
@@ -282,8 +283,8 @@ class UrlController extends Controller
                 properties: [
                     new OA\Property(property: 'original_url', type: 'string', format: 'uri', nullable: true),
                     new OA\Property(property: 'custom_alias', type: 'string', nullable: true),
-                    new OA\Property(property: 'expires_at',   type: 'string', format: 'date-time', nullable: true),
-                    new OA\Property(property: 'is_active',    type: 'boolean', nullable: true),
+                    new OA\Property(property: 'expires_at', type: 'string', format: 'date-time', nullable: true),
+                    new OA\Property(property: 'is_active', type: 'boolean', nullable: true),
                 ],
             ),
         ),

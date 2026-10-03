@@ -1,4 +1,5 @@
 <?php
+
 // app/Models/Url.php
 
 namespace App\Models;
@@ -30,8 +31,8 @@ class Url extends Model
      * Attribute casting.
      */
     protected $casts = [
-        'expires_at'   => 'datetime',
-        'is_active'    => 'boolean',
+        'expires_at' => 'datetime',
+        'is_active' => 'boolean',
         'clicks_count' => 'integer',
     ];
 
@@ -64,7 +65,7 @@ class Url extends Model
     {
         return $query->where(function (Builder $q) {
             $q->whereNull('expires_at')
-              ->orWhere('expires_at', '>', now());
+                ->orWhere('expires_at', '>', now());
         });
     }
 
@@ -73,7 +74,7 @@ class Url extends Model
     {
         return $query->where(function (Builder $q) use ($code) {
             $q->where('short_code', $code)
-              ->orWhere('custom_alias', $code);
+                ->orWhere('custom_alias', $code);
         });
     }
 

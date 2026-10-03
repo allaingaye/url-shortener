@@ -1,4 +1,5 @@
 <?php
+
 // tests/Pest.php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;

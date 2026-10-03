@@ -1,4 +1,5 @@
 <?php
+
 // app/Policies/UrlPolicy.php
 
 namespace App\Policies;

@@ -1,4 +1,5 @@
 <?php
+
 // app/Http/Controllers/Api/UrlStatsController.php
 
 namespace App\Http\Controllers\Api;
@@ -48,22 +49,22 @@ class UrlStatsController extends Controller
         return response()->json([
             'data' => [
                 'url' => [
-                    'id'           => $url->id,
-                    'short_code'   => $url->public_code,
-                    'short_url'    => $url->short_url,
+                    'id' => $url->id,
+                    'short_code' => $url->public_code,
+                    'short_url' => $url->short_url,
                     'original_url' => $url->original_url,
                 ],
 
-                'total_clicks'   => $url->clicks()->count(),
-                'unique_visitors'=> $url->clicks()->distinct('ip_address')->count('ip_address'),
+                'total_clicks' => $url->clicks()->count(),
+                'unique_visitors' => $url->clicks()->distinct('ip_address')->count('ip_address'),
 
-                'by_device'      => $this->groupCount($url, 'device'),
-                'by_browser'     => $this->groupCount($url, 'browser'),
-                'by_platform'    => $this->groupCount($url, 'platform'),
+                'by_device' => $this->groupCount($url, 'device'),
+                'by_browser' => $this->groupCount($url, 'browser'),
+                'by_platform' => $this->groupCount($url, 'platform'),
 
-                'top_referers'   => $this->topReferers($url, 10),
+                'top_referers' => $this->topReferers($url, 10),
 
-                'by_day'         => $this->byDay($url, 30),
+                'by_day' => $this->byDay($url, 30),
             ],
         ]);
     }

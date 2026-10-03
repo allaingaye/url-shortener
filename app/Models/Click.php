@@ -1,4 +1,5 @@
 <?php
+
 // app/Models/Click.php
 
 namespace App\Models;
@@ -35,8 +36,9 @@ class Click extends Model
     {
         return $this->belongsTo(Url::class);
     }
+
     public function clicks(): HasMany
-   {   
+    {
         return $this->hasMany(Click::class);
-   }
+    }
 }

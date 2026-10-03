@@ -1,4 +1,5 @@
 <?php
+
 // app/OpenApi/Schemas/UrlSchema.php
 
 namespace App\OpenApi\Schemas;

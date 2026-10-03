@@ -1,4 +1,5 @@
 <?php
+
 // app/OpenApi/OpenApi.php
 
 namespace App\OpenApi;

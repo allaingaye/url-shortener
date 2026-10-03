@@ -1,4 +1,5 @@
 <?php
+
 // tests/Feature/Api/AnalyticsTest.php
 
 use App\Models\Click;
@@ -10,7 +11,7 @@ it('records a click when a short URL is visited', function () {
 
     $this->get('/track', [
         'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0) Chrome/120.0',
-        'Referer'    => 'https://google.com/',
+        'Referer' => 'https://google.com/',
     ]);
 
     expect(Click::count())->toBe(1);
@@ -50,7 +51,7 @@ it('records multiple clicks on the same URL', function () {
 
 it('returns aggregated stats for the URL owner', function () {
     $jane = User::factory()->create();
-    $url  = Url::factory()->ownedBy($jane)->create(['short_code' => 'st']);
+    $url = Url::factory()->ownedBy($jane)->create(['short_code' => 'st']);
 
     // Create some clicks with varied attributes
     Click::factory()->for($url)->count(3)->create(['browser' => 'Chrome']);
@@ -80,8 +81,8 @@ it('returns aggregated stats for the URL owner', function () {
 
 it('forbids viewing stats for another user\'s URL', function () {
     $jane = User::factory()->create();
-    $bob  = User::factory()->create();
-    $url  = Url::factory()->ownedBy($jane)->create();
+    $bob = User::factory()->create();
+    $url = Url::factory()->ownedBy($jane)->create();
 
     $this->actingAs($bob, 'sanctum')
         ->getJson("/api/v1/urls/{$url->id}/stats")

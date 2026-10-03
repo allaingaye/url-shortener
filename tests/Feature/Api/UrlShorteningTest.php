@@ -1,4 +1,5 @@
 <?php
+
 // tests/Feature/Api/UrlShorteningTest.php
 
 use App\Models\Url;
@@ -32,7 +33,7 @@ it('rejects an invalid URL', function () {
     $this->postJson('/api/v1/urls', [
         'original_url' => 'not-a-url',
     ])->assertUnprocessable()
-      ->assertJsonValidationErrors('original_url');
+        ->assertJsonValidationErrors('original_url');
 });
 
 it('rejects a missing URL', function () {
@@ -59,7 +60,7 @@ it('rejects a reserved custom alias', function () {
         'original_url' => 'https://example.com',
         'custom_alias' => 'api',
     ])->assertUnprocessable()
-      ->assertJsonValidationErrors('custom_alias');
+        ->assertJsonValidationErrors('custom_alias');
 });
 
 it('rejects a duplicate custom alias', function () {
@@ -69,5 +70,5 @@ it('rejects a duplicate custom alias', function () {
         'original_url' => 'https://example.com',
         'custom_alias' => 'taken',
     ])->assertUnprocessable()
-      ->assertJsonValidationErrors('custom_alias');
+        ->assertJsonValidationErrors('custom_alias');
 });

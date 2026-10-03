@@ -1,4 +1,5 @@
 <?php
+
 // app/Services/UrlService.php
 
 namespace App\Services;
@@ -30,12 +31,12 @@ class UrlService
     public function create(array $data, ?int $userId = null): Url
     {
         return Url::create([
-            'user_id'      => $userId,
+            'user_id' => $userId,
             'original_url' => $data['original_url'],
-            'short_code'   => $this->generator->generate(),
+            'short_code' => $this->generator->generate(),
             'custom_alias' => $data['custom_alias'] ?? null,
-            'expires_at'   => $data['expires_at']   ?? null,
-            'is_active'    => true,
+            'expires_at' => $data['expires_at'] ?? null,
+            'is_active' => true,
         ]);
     }
 

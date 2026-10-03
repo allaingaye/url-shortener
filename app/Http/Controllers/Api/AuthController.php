@@ -1,4 +1,5 @@
 <?php
+
 // app/Http/Controllers/Api/AuthController.php
 
 namespace App\Http\Controllers\Api;
@@ -58,7 +59,7 @@ class AuthController extends Controller
         $token = $user->createToken('api')->plainTextToken;
 
         return response()->json([
-            'user'  => $user,
+            'user' => $user,
             'token' => $token,
         ], 201);
     }
@@ -108,7 +109,7 @@ class AuthController extends Controller
         $token = $user->createToken($deviceName)->plainTextToken;
 
         return response()->json([
-            'user'  => $user,
+            'user' => $user,
             'token' => $token,
         ]);
     }
