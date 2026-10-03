@@ -11,6 +11,7 @@ services:
       - .:/var/www
       - ./storage:/var/www/storage
       - ./database:/var/www/database
+      - vendor:/var/www/vendor
     environment:
       RUN_MIGRATIONS: "false"
     networks:
@@ -37,6 +38,7 @@ services:
       - .:/var/www
       - ./storage:/var/www/storage
       - ./database:/var/www/database
+      - vendor:/var/www/vendor
     command: ["php", "artisan", "queue:work", "--sleep=1", "--tries=3", "--max-time=3600"]
     networks:
       - laravel
@@ -96,4 +98,6 @@ networks:
 
 volumes:
   redis_data:
+    driver: local
+  vendor:
     driver: local
