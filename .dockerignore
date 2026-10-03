@@ -1,0 +1,50 @@
+# ── Git ──
+.git
+.gitignore
+.gitattributes
+
+# ── Local environment ──
+.env
+.env.*
+!.env.example
+
+# ── Vendor (rebuilt in image) ──
+vendor/
+node_modules/
+
+# ── Storage (mounted at runtime) ──
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/api-docs/*
+!storage/.gitignore
+!storage/logs/.gitignore
+
+# ── SQLite database (mounted at runtime) ──
+database/database.sqlite
+database/*.sqlite
+
+# ── Tests & docs ──
+tests/
+phpunit.xml
+phpunit.xml.dist
+README.md
+CHANGELOG.md
+.github/
+.vscode/
+.idea/
+*.md
+!README.md
+
+# ── Docker ──
+docker/
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# ── Misc ──
+.editorconfig
+.php-cs-fixer.cache
+.phpunit.result.cache
+scripts/
