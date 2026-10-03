@@ -14,7 +14,7 @@ Built with **Laravel 12** · **PHP 8.4** · **Redis 7** · **Docker**
 [![Code Style](https://github.com/allaingaye/url-shortener/actions/workflows/pint.yml/badge.svg)](https://github.com/allaingaye/url-shortener/actions/workflows/pint.yml)
 [![License](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
 
-[Features](#-features) · [Quick Start](#-quick-start) · [API Reference](#-api-reference) · [Architecture](#-architecture) · [Rate Limiting](#-rate-limiting)
+[Features](#-features) · [Quick Start](#-quick-start) · [API Reference](#-api-reference) · [Architecture](#-architecture) · [Testing](#-testing) · [Rate Limiting](#-rate-limiting)
 
 </div>
 
@@ -36,6 +36,7 @@ Built with **Laravel 12** · **PHP 8.4** · **Redis 7** · **Docker**
 - Click tracking with **device**, **browser**, **platform**, **referrer**
 - Aggregated stats: **total clicks**, **unique visitors**, **top referrers**
 - **Daily time-series** for charts
+- **Async recording** via Redis queue
 
 </td>
 <td width="50%" valign="top">
@@ -44,13 +45,17 @@ Built with **Laravel 12** · **PHP 8.4** · **Redis 7** · **Docker**
 - **Sanctum** Bearer token authentication
 - **Ownership policies** — users manage only their own URLs
 - **Redis-backed rate limiting** with 5 named limiters
+- **SecurityHeaders middleware** (CSP, HSTS, Permissions-Policy)
 - **Fast `/up`** health endpoint (0.007s response)
 
 ### 🛠 DevOps
 - **Multi-stage Docker build** (~95 MB final image)
-- **Healthchecks** on all services
+- **5 services** — app, web, queue, scheduler, redis
+- **Healthchecks** on all containers
+- **GitHub Actions CI** — tests + code style on every push
+- **Structured logging** — separate channels for clicks, auth, errors
+- **Scheduled jobs** — auto-prune expired URLs daily
 - **Interactive Swagger UI** at `/api/documentation`
-- **Nginx** with security headers, gzip, static caching
 
 </td>
 </tr>
@@ -67,12 +72,14 @@ Built with **Laravel 12** · **PHP 8.4** · **Redis 7** · **Docker**
 | **Framework** | Laravel 12 | MVC, routing, ORM, validation |
 | **Language** | PHP 8.4 | Typed properties, attributes, match expressions |
 | **Database** | SQLite | Zero-config, file-based persistence |
-| **Cache / Queue** | Redis 7 | URL resolution cache, rate limiter, AOF persistence |
-| **Web Server** | Nginx 1.27 (Alpine) | Reverse proxy, static assets, security headers |
+| **Cache / Queue** | Redis 7 | URL cache, rate limiter, queue backend, AOF persistence |
+| **Web Server** | Nginx 1.27 (Alpine) | Reverse proxy, static assets, gzip |
 | **Runtime** | PHP-FPM (Alpine) | Optimized request handling |
 | **API Docs** | L5-Swagger | OpenAPI 3.0 + interactive UI |
 | **User-Agent** | jenssegers/agent | Device / browser / platform detection |
 | **Auth** | Laravel Sanctum | Token-based API authentication |
+| **Testing** | Pest 4 | Modern PHP test framework |
+| **CI** | GitHub Actions | Test + code style on every push |
 
 </div>
 
@@ -119,6 +126,12 @@ curl http://localhost:8080/up
 | 🚀 **API** | http://localhost:8080/api/v1 |
 | 📖 **Swagger UI** | http://localhost:8080/api/documentation |
 | 💚 **Health check** | http://localhost:8080/up |
+
+> ⚠️ **Important:** Always run Composer commands **inside** the container:
+> ```bash
+> docker compose exec app composer require some/package
+> ```
+> `vendor/` lives in a Docker named volume for performance — the host's vendor is ignored.
 
 ---
 
@@ -217,27 +230,36 @@ Content-Type: application/json
 <div align="center">
 
 ```
-                        ┌──────────────────────┐
-                        │      Internet        │
-                        └──────────┬───────────┘
-                                   │ :8080
-                        ┌──────────▼───────────┐
-                        │      Nginx           │
-                        │  static + PHP-FPM    │
-                        └──────────┬───────────┘
-                                   │ :9000
-                        ┌──────────▼───────────┐
-                        │      PHP-FPM         │
-                        │    Laravel 12        │
-                        └─────┬──────────┬─────┘
-                              │          │
-                  ┌───────────▼──┐   ┌───▼────────────┐
-                  │   Redis 7    │   │  SQLite (file) │
-                  │ cache + queue│   │  database/     │
-                  └──────────────┘   └────────────────┘
+                          ┌──────────────────────┐
+                          │      Internet        │
+                          └──────────┬───────────┘
+                                     │ :8080
+                          ┌──────────▼───────────┐
+                          │      Nginx           │
+                          │  static + PHP-FPM    │
+                          └──────────┬───────────┘
+                                     │ :9000
+                ┌────────────────────┴────────────────────┐
+                │                                         │
+     ┌──────────▼───────────┐                  ┌──────────▼───────────┐
+     │      PHP-FPM         │                  │    PHP-FPM           │
+     │    Laravel 12        │                  │  queue:work          │
+     │    (web requests)    │                  │  (background jobs)   │
+     └─────┬──────────┬─────┘                  └──────────┬───────────┘
+           │          │                                   │
+           │          │  ┌──────────────────┐             │
+           │          └──▶    Scheduler     ◀─────────────┘
+           │             │  schedule:work   │
+           │             └────────┬─────────┘
+           │                      │
+  ┌────────▼────────┐   ┌─────────▼───────┐   ┌──────────────────┐
+  │   Redis 7       │   │  SQLite (file)  │   │  Laravel Logs    │
+  │ cache + queue   │   │  database/      │   │  clicks/auth/    │
+  │ + rate limiter  │   │                 │   │  errors          │
+  └─────────────────┘   └─────────────────┘   └──────────────────┘
 ```
 
-**All three containers** have healthchecks and start in dependency order.
+**5 containers** — app, web, queue, scheduler, redis — all with healthchecks.
 
 </div>
 
@@ -249,8 +271,9 @@ Content-Type: application/json
 | **Redis (DB 1)** for cache | Isolates app cache from queue — easy to flush independently |
 | **URL ID caching**, not model | Eloquent models serialize poorly across cache drivers |
 | **302, not 301** | Keeps click analytics accurate even if destination changes |
-| **Async-ready analytics** | `AnalyticsService::record()` extracted for future queue dispatch |
+| **Async click recording** | Queue-dispatch keeps redirect latency under 100ms |
 | **Policy-based auth** | Enforces ownership at the framework level, not in controllers |
+| **SecurityHeaders middleware** | Defense-in-depth, single source of truth (Nginx defers) |
 
 ---
 
@@ -259,42 +282,62 @@ Content-Type: application/json
 ```
 url-shortener/
 ├── app/
+│   ├── Console/Commands/
+│   │   └── PruneExpiredUrls.php         # Scheduled cleanup command
 │   ├── Http/
 │   │   ├── Controllers/
-│   │   │   ├── Api/               # AuthController, UrlController, UrlStatsController
+│   │   │   ├── Api/                     # AuthController, UrlController, UrlStatsController
 │   │   │   └── RedirectController.php
-│   │   ├── Requests/              # Form request validation
-│   │   └── Resources/             # API JSON resources
-│   ├── Models/                    # Eloquent models (Url, Click, User)
-│   ├── OpenApi/                   # Swagger annotations
-│   ├── Policies/                  # Authorization (UrlPolicy)
-│   ├── Providers/                 # AppServiceProvider (rate limiters)
-│   └── Services/                  # Business logic
-│       ├── AnalyticsService.php
+│   │   ├── Middleware/
+│   │   │   └── SecurityHeaders.php      # CSP, HSTS, Permissions-Policy
+│   │   ├── Requests/                    # Form request validation
+│   │   └── Resources/
+│   │       └── UrlResource.php
+│   ├── Jobs/
+│   │   └── RecordClick.php              # Queued click recording
+│   ├── Models/                          # Url, Click, User
+│   ├── OpenApi/                         # Swagger annotations
+│   ├── Policies/
+│   │   └── UrlPolicy.php
+│   ├── Providers/
+│   │   └── AppServiceProvider.php       # 5 named rate limiters
+│   └── Services/
+│       ├── AnalyticsService.php         # UA parsing + click logging
 │       ├── ShortCodeGenerator.php
-│       └── UrlService.php
+│       └── UrlService.php               # Cached resolution
 ├── bootstrap/
-│   ├── app.php                    # Middleware + routing config
-│   └── providers.php              # Service provider registry
+│   └── app.php                          # Middleware + routing + exception logging
 ├── config/
-│   └── l5-swagger.php             # Swagger config
+│   └── l5-swagger.php
 ├── database/
-│   ├── migrations/                # Schema (users, urls, clicks, tokens)
-│   └── factories/
+│   ├── factories/                       # UserFactory, UrlFactory, ClickFactory
+│   └── migrations/                      # users, urls, clicks, tokens
 ├── docker/
-│   ├── nginx/default.conf         # Nginx site config
+│   ├── nginx/default.conf               # Static + PHP-FPM proxy
 │   └── php/
-│       ├── entrypoint.sh          # Container startup script
-│       ├── opcache.ini            # OPcache tuning
-│       ├── php.ini                # PHP settings
-│       └── www.conf               # PHP-FPM pool
+│       ├── entrypoint.sh                # Redis wait, cache clear, migrations
+│       ├── opcache.ini
+│       ├── php.ini
+│       └── www.conf
 ├── routes/
-│   ├── api.php                    # API endpoints
-│   └── web.php                    # Redirect route
+│   ├── api.php                          # /api/v1 endpoints
+│   ├── web.php                          # /{code} redirect
+│   └── console.php                      # Scheduled tasks
 ├── storage/
+│   └── logs/                            # laravel, clicks, auth, errors
 ├── tests/
+│   ├── Feature/
+│   │   ├── Api/                         # Auth, URLs, ownership, throttling, analytics
+│   │   ├── Console/                     # PruneExpiredUrls
+│   │   ├── Logging/                     # Log channel tests
+│   │   ├── Middleware/                  # SecurityHeaders
+│   │   └── Public/                      # Redirect
+│   └── Pest.php
+├── .github/workflows/
+│   ├── tests.yml                        # Runs Pest on push/PR
+│   └── pint.yml                         # Code style check
 ├── docker-compose.yml
-├── Dockerfile                     # Multi-stage build
+├── Dockerfile                           # Multi-stage Alpine build
 ├── .dockerignore
 ├── .env.example
 └── README.md
@@ -304,44 +347,82 @@ url-shortener/
 
 ## 🧪 Testing
 
+This project uses **[Pest 4](https://pestphp.com/)** — a modern testing framework.
+
 ```bash
 # Run all tests
-docker compose exec app php artisan test
+docker compose exec app ./vendor/bin/pest
 
-# Run a specific test file
-docker compose exec app php artisan test tests/Feature/UrlShorteningTest.php
+# Run a specific suite
+docker compose exec app ./vendor/bin/pest tests/Feature/Api
 
-# Run with coverage (requires Xdebug)
-docker compose exec app php artisan test --coverage
+# Run a specific file
+docker compose exec app ./vendor/bin/pest tests/Feature/Api/UrlShorteningTest.php
+
+# Run a single test by name
+docker compose exec app ./vendor/bin/pest --filter="throttles login"
+
+# With coverage (requires Xdebug)
+docker compose exec app ./vendor/bin/pest --coverage
 ```
+
+**Current test coverage:**
+- ✅ **61 tests** passing, 1 skipped
+- ✅ **160+ assertions**
+- ✅ 3 CI workflows on every push
+
+### What's tested
+
+| Suite | Coverage |
+|:------|:---------|
+| `Api/AuthTest` | Register, login, logout, /me, invalid credentials |
+| `Api/UrlShorteningTest` | Create, validate, aliases, reserved words |
+| `Api/UrlOwnershipTest` | Policy enforcement, cross-user access |
+| `Api/RateLimitingTest` | 429 responses, retry-after headers |
+| `Api/AnalyticsTest` | Click stats, device breakdown |
+| `Api/QueuedAnalyticsTest` | Async job dispatch |
+| `Public/RedirectTest` | 302 redirects, 404 for expired/inactive |
+| `Console/PruneExpiredUrlsTest` | Cleanup command + cache busting |
+| `Logging/LoggingTest` | Auth, clicks, errors channels |
+| `Middleware/SecurityHeadersTest` | CSP, X-Frame-Options, HSTS |
 
 ---
 
 ## 🐳 Docker Commands Cheatsheet
 
 ```bash
-# Start the stack
+# Start / stop the stack
 docker compose up -d
-
-# Stop the stack
 docker compose down
 
 # Rebuild the app image
 docker compose build --no-cache app
 
-# View logs
+# View logs (any service)
 docker compose logs -f app
+docker compose logs -f queue
+docker compose logs -f scheduler
 docker compose logs -f web
 
-# Open a shell in the app container
+# Open a shell in a container
 docker compose exec app sh
 
-# Run an artisan command
+# Run artisan
 docker compose exec app php artisan migrate
+docker compose exec app php artisan urls:prune-expired --dry-run
 
-# Check health status
+# Check health status (5 services)
 docker compose ps
 ```
+
+### Queue & Scheduler
+
+The stack includes dedicated containers:
+
+- **`laravel_queue`** — runs `php artisan queue:work` for background jobs (click analytics)
+- **`laravel_scheduler`** — runs `php artisan schedule:work` for cron-like tasks (prune expired URLs)
+
+Both restart automatically on failure and have healthchecks.
 
 ---
 
@@ -352,8 +433,20 @@ docker compose ps
 - [x] **Phase 3** — Rate limiting with Redis
 - [x] **Phase 4** — Click analytics with device/browser tracking
 - [x] **Phase 5** — Custom aliases, expiration, search, filtering, pagination
-- [x] **Phase 6** — Production-grade Docker
-- [ ] **Phase 7** — Queues, tests, CI/CD, scheduled jobs
+- [x] **Phase 6** — Production-grade Docker (multi-stage, healthchecks)
+- [x] **Phase 7** — Queues, tests, CI/CD, scheduled jobs, structured logging, security headers
+
+### Possible next steps
+
+- [ ] Redis-backed sessions
+- [ ] API versioning (`/v2`)
+- [ ] Multi-tenant support
+- [ ] Kubernetes manifests
+- [ ] Laravel Horizon for queue monitoring
+- [ ] GeoIP enrichment for clicks
+- [ ] Real-time analytics dashboard
+- [ ] QR code generation
+- [ ] Link password protection
 
 ---
 
@@ -366,6 +459,12 @@ Contributions are welcome. Please open an issue or submit a pull request.
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+**Before submitting:**
+```bash
+docker compose exec app ./vendor/bin/pint --test
+docker compose exec app ./vendor/bin/pest
+```
 
 ---
 
@@ -380,5 +479,7 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 **Built with ❤️ using Laravel, Redis, and Docker**
 
 ⭐ If this project helped you, consider giving it a star!
+
+[⬆ Back to top](#-url-shortener-api)
 
 </div>
