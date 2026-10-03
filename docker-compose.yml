@@ -54,6 +54,34 @@ services:
       retries: 3
       start_period: 15s
 
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: laravel_scheduler
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+      - ./storage:/var/www/storage
+      - ./database:/var/www/database
+      - vendor:/var/www/vendor
+    command: ["php", "artisan", "schedule:work"]
+    networks:
+      - laravel
+    depends_on:
+      app:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'artisan schedule:work' > /dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
   web:
     image: nginx:1.27-alpine
     container_name: laravel_web
