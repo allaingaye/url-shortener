@@ -6,13 +6,14 @@ namespace App\Services;
 
 use App\Models\Click;
 use App\Models\Url;
+use Illuminate\Support\Facades\Log;
 use Jenssegers\Agent\Agent;
 
 /**
  * Records click analytics for shortened URLs.
  *
  * Extracted from the redirect controller so it can:
- *   - be dispatched from a queued job later (Phase 7)
+ *   - be dispatched from a queued job (Phase 7.6)
  *   - be unit-tested independently of HTTP
  */
 class AnalyticsService
@@ -33,7 +34,7 @@ class AnalyticsService
     ): Click {
         $agent = $this->parseUserAgent($userAgent);
 
-        return Click::create([
+        $click = Click::create([
             'url_id' => $url->id,
             'ip_address' => $ip,
             'user_agent' => mb_substr($userAgent, 0, 512),
@@ -43,6 +44,18 @@ class AnalyticsService
             'platform' => $agent['platform'],
             'country' => null, // populated later (GeoIP)
         ]);
+
+        Log::channel('clicks')->info('Click recorded', [
+            'url_id' => $url->id,
+            'public_code' => $url->public_code,
+            'ip' => $ip,
+            'browser' => $agent['browser'],
+            'platform' => $agent['platform'],
+            'device' => $agent['device'],
+            'referer' => $referer,
+        ]);
+
+        return $click;
     }
 
     /**
