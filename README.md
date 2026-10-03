@@ -1,58 +1,192 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# URL Shortener API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A production-grade REST API for shortening URLs — built with **Laravel 12**, **Redis**, and **Docker**.
 
-## About Laravel
+![PHP](https://img.shields.io/badge/PHP-8.4-777BB4?logo=php&logoColor=white)
+![Laravel](https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## ✨ Features
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Category | Feature |
+|----------|---------|
+| **Core** | URL shortening with random 7-character codes (62⁷ combinations) |
+| **Customization** | User-chosen custom aliases with reserved-word protection |
+| **Lifecycle** | URL expiration + activation toggle |
+| **Analytics** | Click tracking with device, browser, platform, and referrer |
+| **Stats** | Aggregated views: total clicks, unique visitors, top referrers, daily counts |
+| **Auth** | Laravel Sanctum Bearer tokens — register, login, logout, me |
+| **Authorization** | Ownership policies — users manage only their own URLs |
+| **Rate Limiting** | Redis-backed: 5 named limiters protecting all critical endpoints |
+| **API Docs** | Interactive Swagger UI at `/api/documentation` |
+| **DevOps** | Multi-stage Docker build, healthchecks, entrypoint scripting |
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🛠 Tech Stack
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+| Layer | Technology |
+|-------|-----------|
+| Framework | Laravel 12 |
+| Language | PHP 8.4 |
+| Database | SQLite (file-based, zero-config) |
+| Cache / Queue | Redis 7 (AOF persistence) |
+| Web Server | Nginx 1.27 (Alpine) |
+| Runtime | PHP-FPM (Alpine) |
+| API Docs | L5-Swagger (OpenAPI 3.0) |
+| User-Agent Parser | jenssegers/agent |
+| Auth | Laravel Sanctum |
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+---
 
-## Agentic Development
+## 🚀 Quick Start
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+### Prerequisites
+
+- Docker + Docker Compose
+- Git
+
+### Installation
 
 ```bash
-composer require laravel/boost --dev
+# Clone the repo
+git clone https://github.com/YOUR_USERNAME/url-shortener.git
+cd url-shortener
 
-php artisan boost:install
-```
+# Configure environment
+cp .env.example .env
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+# Build & launch the stack
+docker compose build
+docker compose up -d
 
-## Contributing
+# Initialize the application
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan migrate
+docker compose exec app php artisan l5-swagger:generate
+Verify
+bash
+curl http://localhost:8080/up
+# → "ok" in ~7ms (no PHP boot)
+Access
+Service	URL
+API	http://localhost:8080/api/v1
+Swagger UI	http://localhost:8080/api/documentation
+Health check	http://localhost:8080/up
+📚 API Reference
+Authentication
+Method	Endpoint	Auth	Purpose
+POST	/api/v1/auth/register	—	Create account, returns token
+POST	/api/v1/auth/login	—	Authenticate, returns token
+POST	/api/v1/auth/logout	✅	Revoke current token
+GET	/api/v1/auth/me	✅	Current user profile
+URLs
+Method	Endpoint	Auth	Purpose
+POST	/api/v1/urls	Optional	Shorten a URL (guests allowed)
+GET	/api/v1/urls	✅	List own URLs (search, filter, sort, paginate)
+GET	/api/v1/urls/{id}	✅	Get one URL
+PATCH	/api/v1/urls/{id}	✅	Update URL (alias, expiry, active)
+DELETE	/api/v1/urls/{id}	✅	Delete URL
+Analytics
+Method	Endpoint	Auth	Purpose
+GET	/api/v1/urls/{id}/stats	✅	Aggregated click analytics
+Redirect
+Method	Endpoint	Purpose
+GET	/{code}	Redirect to original URL (302)
+🔒 Rate Limiting
+All limits backed by Redis with proper 429 Too Many Requests responses and Retry-After headers.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Endpoint	Limit	Key	Purpose
+POST /auth/login	5/min	IP + email	Brute-force protection
+POST /auth/register	5/min	IP	Spam-account prevention
+Public API	60/min	IP	Abuse protection
+Authenticated API	120/min	User ID	Fair use per account
+Redirects	300/min	IP	Hot-link flood protection
+🐳 Docker Architecture
+                    ┌──────────────────────┐
+                    │      Internet        │
+                    └──────────┬───────────┘
+                               │ :8080
+                    ┌──────────▼───────────┐
+                    │    Nginx (web)       │
+                    │  Static + PHP-FPM    │
+                    └──────────┬───────────┘
+                               │ :9000
+                    ┌──────────▼───────────┐
+                    │   PHP-FPM (app)      │
+                    │    Laravel 12        │
+                    └─────┬──────────┬─────┘
+                          │          │
+              ┌───────────▼──┐   ┌───▼────────────┐
+              │ Redis 7      │   │  SQLite (file) │
+              │ cache+queue  │   │  database/     │
+              └──────────────┘   └────────────────┘
+              All three containers have healthchecks and start in dependency order.
 
-## Code of Conduct
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+📁 Project Structure
 
-## Security Vulnerabilities
+.
+├── app/
+│   ├── Http/Controllers/Api/     # API controllers
+│   ├── Http/Requests/            # Form validation
+│   ├── Http/Resources/           # JSON shaping
+│   ├── Models/                   # Eloquent models
+│   ├── OpenApi/                  # Swagger annotations
+│   ├── Policies/                 # Authorization
+│   └── Services/                 # Business logic
+├── docker/
+│   ├── nginx/default.conf        # Nginx config
+│   └── php/                      # php.ini, opcache, FPM, entrypoint
+├── routes/
+│   ├── api.php                   # API routes
+│   └── web.php                   # Redirect route
+├── database/migrations/          # Schema
+├── docker-compose.yml
+├── Dockerfile                    # Multi-stage build
+└── README.md
+🧪 Testing
+docker compose exec app php artisan test
+📄 License
+MIT © Allaingaye Lucien
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Replace:
+- `YOUR_USERNAME` with your GitHub username
+- `Your Name` with your name
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Step 2 — Verify `.gitignore` includes `.env` and SQLite
+
+Run:
+
+```bash
+docker compose exec app cat .gitignore
+
+Confirm it has:
+
+text
+.env
+/vendor
+/node_modules
+
+Add these lines at the end if missing:
+# Local SQLite database
+/database/*.sqlite
+/database/*.sqlite-journal
+/database/*.sqlite-wal
+/database/*.sqlite-shm
+
+# Generated Swagger spec
+/storage/api-docs/*.json
+/storage/api-docs/*.yaml
+
+# Diagnostic scripts
+/scripts
+
+# Docker overrides
+docker-compose.override.yml
