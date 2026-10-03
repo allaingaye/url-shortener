@@ -2,6 +2,7 @@
 
 // bootstrap/app.php
 
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -15,14 +16,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // For API/JSON requests, don't redirect guests to a "login" route — return 401 JSON.
-        // For web requests, keep the default (redirect to /login) — useful if we add a dashboard later.
-        $middleware->redirectGuestsTo(function (Request $request) {
-            return $request->is('api/*') || $request->expectsJson() ? null : '/login';
-        });
+        // Return JSON 401 instead of redirecting to /login for API requests.
+        $middleware->redirectGuestsTo(fn (Request $request) => null);
+
+        // Apply security headers globally to every response.
+        $middleware->append(SecurityHeaders::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Render JSON for all API + JSON-accepting requests.
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
