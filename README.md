@@ -135,7 +135,7 @@ curl http://localhost:8080/up
 
 ---
 
-## 📚 API Reference
+##  API Reference
 
 ### 🔐 Authentication
 
@@ -225,7 +225,7 @@ Content-Type: application/json
 
 ---
 
-## 🏗 Architecture
+##  Architecture
 
 <div align="center">
 
@@ -388,7 +388,7 @@ docker compose exec app ./vendor/bin/pest --coverage
 
 ---
 
-## 🐳 Docker Commands Cheatsheet
+##  Docker Commands Cheatsheet
 
 ```bash
 # Start / stop the stack
@@ -450,7 +450,7 @@ Both restart automatically on failure and have healthchecks.
 
 ---
 
-## 🤝 Contributing
+##  Contributing
 
 Contributions are welcome. Please open an issue or submit a pull request.
 
@@ -468,7 +468,7 @@ docker compose exec app ./vendor/bin/pest
 
 ---
 
-## 📄 License
+##  License
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
