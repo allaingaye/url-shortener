@@ -478,7 +478,7 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 **Built with ❤️ using Laravel, Redis, and Docker**
 
-⭐ If this project helped you, consider giving it a star!
+ If this project helped you, consider giving it a star!
 
 [⬆ Back to top](#-url-shortener-api)
 
