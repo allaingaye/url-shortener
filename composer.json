@@ -10,6 +10,7 @@
         "darkaonline/l5-swagger": "*",
         "jenssegers/agent": "^2.6",
         "laravel/framework": "^13.17",
+        "laravel/reverb": "^1.12",
         "laravel/sanctum": "^4.3",
         "laravel/tinker": "^3.0",
         "simplesoftwareio/simple-qrcode": "^4.2"
