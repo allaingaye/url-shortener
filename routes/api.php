@@ -3,6 +3,7 @@
 // routes/api.php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\QrCodeController;
 use App\Http\Controllers\Api\UrlController;
 use App\Http\Controllers\Api\UrlStatsController;
 use Illuminate\Support\Facades\Route;
@@ -48,6 +49,7 @@ Route::prefix('v1')->group(function () {
         Route::get('urls', [UrlController::class, 'index'])->name('urls.index');
         Route::get('urls/{url}/stats', UrlStatsController::class)->name('urls.stats');
         Route::get('urls/{url}', [UrlController::class, 'show'])->name('urls.show');
+        Route::get('urls/{url}/qr', QrCodeController::class)->name('urls.qr');
         Route::patch('urls/{url}', [UrlController::class, 'update'])->name('urls.update');
         Route::delete('urls/{url}', [UrlController::class, 'destroy'])->name('urls.destroy');
     });
