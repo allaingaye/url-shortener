@@ -1,0 +1,22 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+networks:
+  backend:
+    external: true
+    name: url-shortener-net    # ← joins the backend network

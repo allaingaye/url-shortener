@@ -152,6 +152,7 @@ services:
 
 networks:
   laravel:
+    name: url-shortener-net    # ← ONLY CHANGE: explicit name
     driver: bridge
 
 volumes:
