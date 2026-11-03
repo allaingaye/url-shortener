@@ -95,7 +95,7 @@ services:
       - ./storage:/var/www/storage
       - ./database:/var/www/database
       - vendor:/var/www/vendor
-    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=6001"]
+    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=6001", "-vvv"]
     networks:
       - laravel
     depends_on:

@@ -10,12 +10,11 @@ use Illuminate\Support\Facades\Route;
 | Web Routes
 |--------------------------------------------------------------------------
 |
-| The only web route is the short-URL redirect.
-| It's throttled per IP to prevent hot-link flooding.
+| The only web route for this app is the short URL redirect.
+| Dashboard, login, and other UI routes are handled by the React SPA.
 |
 */
 
 Route::get('/{code}', RedirectController::class)
     ->where('code', '[A-Za-z0-9_-]+')
-    ->middleware('throttle:redirect')
     ->name('redirect');

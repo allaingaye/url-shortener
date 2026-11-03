@@ -4,6 +4,7 @@
 
 namespace App\Jobs;
 
+use App\Events\ClickRecorded;
 use App\Models\Url;
 use App\Services\AnalyticsService;
 use Illuminate\Bus\Queueable;
@@ -40,11 +41,17 @@ class RecordClick implements ShouldQueue
             return;
         }
 
-        $analytics->record(
+        $click = $analytics->record(
             url: $url,
             ip: $this->ip,
             userAgent: $this->userAgent,
             referer: $this->referer,
         );
+
+        // Load relation so `broadcastWith()` has access to url.user_id and url.public_code
+        $click->load('url');
+
+        // Broadcast to the owner's dashboard in real-time
+        ClickRecorded::dispatch($click);
     }
 }
