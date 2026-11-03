@@ -2,13 +2,14 @@
 
 # 🔗 URL Shortener API
 
-**A production-grade REST API for shortening URLs, tracking clicks, and managing links.**
+**A production-grade URL shortener with real-time analytics, QR codes, and a modern REST API.**
 
-Built with **Laravel 12** · **PHP 8.4** · **Redis 7** · **Docker**
+Built with **Laravel 13** · **PHP 8.4** · **Redis 7** · **Laravel Reverb** · **Docker**
 
 [![PHP](https://img.shields.io/badge/PHP-8.4-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://www.php.net/)
-[![Laravel](https://img.shields.io/badge/Laravel-12-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](https://laravel.com/)
+[![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](https://laravel.com/)
 [![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
+[![WebSocket](https://img.shields.io/badge/Reverb-WebSocket-4A90E2?style=for-the-badge&logo=websocket&logoColor=white)](https://reverb.laravel.com/)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docs.docker.com/compose/)
 [![Tests](https://github.com/allaingaye/url-shortener/actions/workflows/tests.yml/badge.svg)](https://github.com/allaingaye/url-shortener/actions/workflows/tests.yml)
 [![Code Style](https://github.com/allaingaye/url-shortener/actions/workflows/pint.yml/badge.svg)](https://github.com/allaingaye/url-shortener/actions/workflows/pint.yml)
@@ -41,16 +42,36 @@ Built with **Laravel 12** · **PHP 8.4** · **Redis 7** · **Docker**
 </td>
 <td width="50%" valign="top">
 
+### 📱 QR Codes
+- **PNG and SVG** output
+- **Configurable size** (64–1024 px)
+- **Redis-cached** for sub-millisecond repeat access
+- **Owner-only** via policies
+
+### ⚡ Real-Time
+- **Laravel Reverb** WebSocket server
+- **`ClickRecorded` broadcast event** on private user channel
+- **Async dispatch** from queue worker
+- **Nginx WebSocket proxy** at `/app` and `/apps`
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
 ### 🔐 Security
-- **Sanctum** Bearer token authentication
+- **Sanctum** authentication (Bearer tokens + SPA cookies)
 - **Ownership policies** — users manage only their own URLs
 - **Redis-backed rate limiting** with 5 named limiters
 - **SecurityHeaders middleware** (CSP, HSTS, Permissions-Policy)
 - **Fast `/up`** health endpoint (0.007s response)
 
+</td>
+<td width="50%" valign="top">
+
 ### 🛠 DevOps
 - **Multi-stage Docker build** (~95 MB final image)
-- **5 services** — app, web, queue, scheduler, redis
+- **6 services** — app, web, queue, scheduler, reverb, redis
 - **Healthchecks** on all containers
 - **GitHub Actions CI** — tests + code style on every push
 - **Structured logging** — separate channels for clicks, auth, errors
@@ -69,15 +90,17 @@ Built with **Laravel 12** · **PHP 8.4** · **Redis 7** · **Docker**
 
 | Layer | Technology | Purpose |
 |:------|:-----------|:--------|
-| **Framework** | Laravel 12 | MVC, routing, ORM, validation |
+| **Framework** | Laravel 13 | MVC, routing, ORM, validation |
 | **Language** | PHP 8.4 | Typed properties, attributes, match expressions |
 | **Database** | SQLite | Zero-config, file-based persistence |
 | **Cache / Queue** | Redis 7 | URL cache, rate limiter, queue backend, AOF persistence |
-| **Web Server** | Nginx 1.27 (Alpine) | Reverse proxy, static assets, gzip |
+| **WebSocket** | Laravel Reverb | Real-time event broadcasting |
+| **Web Server** | Nginx 1.27 (Alpine) | Reverse proxy, static assets, WebSocket proxy |
 | **Runtime** | PHP-FPM (Alpine) | Optimized request handling |
 | **API Docs** | L5-Swagger | OpenAPI 3.0 + interactive UI |
 | **User-Agent** | jenssegers/agent | Device / browser / platform detection |
-| **Auth** | Laravel Sanctum | Token-based API authentication |
+| **QR Codes** | simple-qrcode | PNG + SVG generation |
+| **Auth** | Laravel Sanctum | Token + SPA cookie authentication |
 | **Testing** | Pest 4 | Modern PHP test framework |
 | **CI** | GitHub Actions | Test + code style on every push |
 
@@ -126,6 +149,7 @@ curl http://localhost:8080/up
 | 🚀 **API** | http://localhost:8080/api/v1 |
 | 📖 **Swagger UI** | http://localhost:8080/api/documentation |
 | 💚 **Health check** | http://localhost:8080/up |
+| 🔌 **Reverb WebSocket** | ws://localhost:8080/app/{key} |
 
 > ⚠️ **Important:** Always run Composer commands **inside** the container:
 > ```bash
@@ -135,7 +159,7 @@ curl http://localhost:8080/up
 
 ---
 
-##  API Reference
+## 📚 API Reference
 
 ### 🔐 Authentication
 
@@ -145,6 +169,7 @@ curl http://localhost:8080/up
 | `POST` | `/api/v1/auth/login` | — | Authenticate, returns Bearer token |
 | `POST` | `/api/v1/auth/logout` | ✅ | Revoke current access token |
 | `GET`  | `/api/v1/auth/me` | ✅ | Current authenticated user |
+| `GET`  | `/sanctum/csrf-cookie` | — | Set CSRF cookie (SPA auth) |
 
 ### 🔗 URLs
 
@@ -162,11 +187,22 @@ curl http://localhost:8080/up
 |:------:|:---------|:----:|:--------|
 | `GET` | `/api/v1/urls/{id}/stats` | ✅ | Aggregated click analytics |
 
-### 🌐 Redirect
+### 📱 QR Codes
+
+| Method | Endpoint | Auth | Purpose |
+|:------:|:---------|:----:|:--------|
+| `GET` | `/api/v1/urls/{id}/qr` | ✅ | QR code as PNG or SVG |
+
+**Query parameters:**
+- `format=png\|svg` (default: `png`)
+- `size=64..1024` (default: `300`, PNG only)
+
+### 🌐 Redirect & WebSocket
 
 | Method | Endpoint | Purpose |
 |:------:|:---------|:--------|
 | `GET` | `/{code}` | Redirect to original URL (`302 Found`) |
+| `POST` | `/broadcasting/auth` | WebSocket channel authorization |
 
 ### Example — Shorten a URL
 
@@ -191,10 +227,24 @@ curl -X POST http://localhost:8080/api/v1/urls \
     "clicks_count": 0,
     "is_active": true,
     "expires_at": null,
-    "created_at": "2026-10-03T00:15:57+00:00",
-    "updated_at": "2026-10-03T00:15:57+00:00"
+    "created_at": "2026-11-03T00:15:57+00:00",
+    "updated_at": "2026-11-03T00:15:57+00:00"
   }
 }
+```
+
+### Example — Download QR code
+
+```bash
+curl -o qr.png \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Accept: image/png" \
+  http://localhost:8080/api/v1/urls/1/qr
+
+# SVG version
+curl -o qr.svg \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  http://localhost:8080/api/v1/urls/1/qr?format=svg&size=500
 ```
 
 ---
@@ -225,7 +275,7 @@ Content-Type: application/json
 
 ---
 
-##  Architecture
+## 🏗 Architecture
 
 <div align="center">
 
@@ -236,30 +286,27 @@ Content-Type: application/json
                                      │ :8080
                           ┌──────────▼───────────┐
                           │      Nginx           │
-                          │  static + PHP-FPM    │
+                          │ static + PHP-FPM     │
+                          │ + WebSocket proxy    │
                           └──────────┬───────────┘
-                                     │ :9000
-                ┌────────────────────┴────────────────────┐
-                │                                         │
-     ┌──────────▼───────────┐                  ┌──────────▼───────────┐
-     │      PHP-FPM         │                  │    PHP-FPM           │
-     │    Laravel 12        │                  │  queue:work          │
-     │    (web requests)    │                  │  (background jobs)   │
-     └─────┬──────────┬─────┘                  └──────────┬───────────┘
-           │          │                                   │
-           │          │  ┌──────────────────┐             │
-           │          └──▶    Scheduler     ◀─────────────┘
-           │             │  schedule:work   │
-           │             └────────┬─────────┘
-           │                      │
-  ┌────────▼────────┐   ┌─────────▼───────┐   ┌──────────────────┐
-  │   Redis 7       │   │  SQLite (file)  │   │  Laravel Logs    │
-  │ cache + queue   │   │  database/      │   │  clicks/auth/    │
-  │ + rate limiter  │   │                 │   │  errors          │
-  └─────────────────┘   └─────────────────┘   └──────────────────┘
+                                     │
+                ┌────────────────────┼────────────────────┐
+                │                    │                    │
+     ┌──────────▼───────────┐  ┌─────▼──────────┐  ┌─────▼──────────┐
+     │   PHP-FPM (app)      │  │ PHP-FPM        │  │ PHP Reverb     │
+     │   Laravel 13         │  │ (queue:work)   │  │ (WebSocket)    │
+     │   HTTP requests      │  │ click + event  │  │ :6001          │
+     └──────┬───────────────┘  └─────┬──────────┘  └─────┬──────────┘
+            │                        │                    │
+            │         ┌──────────────┼────────────────────┘
+            │         │              │
+     ┌──────▼─────────▼──────┐  ┌────▼───────────┐  ┌──────────────┐
+     │      Redis 7          │  │ SQLite         │  │ Scheduler    │
+     │ cache + queue + pubsub│  │ database/      │  │ (cron jobs)  │
+     └───────────────────────┘  └────────────────┘  └──────────────┘
 ```
 
-**5 containers** — app, web, queue, scheduler, redis — all with healthchecks.
+**6 containers** — app, web, queue, scheduler, reverb, redis — all with healthchecks.
 
 </div>
 
@@ -272,8 +319,10 @@ Content-Type: application/json
 | **URL ID caching**, not model | Eloquent models serialize poorly across cache drivers |
 | **302, not 301** | Keeps click analytics accurate even if destination changes |
 | **Async click recording** | Queue-dispatch keeps redirect latency under 100ms |
+| **`ShouldBroadcastNow`** | Already inside queue worker — no second queue hop |
+| **Two REVERB_HOST values** | PHP uses `reverb:6001` (Docker), browser uses `localhost:8080` (Nginx proxy) |
 | **Policy-based auth** | Enforces ownership at the framework level, not in controllers |
-| **SecurityHeaders middleware** | Defense-in-depth, single source of truth (Nginx defers) |
+| **Sanctum SPA mode** | Cookie-based auth required for WebSocket private channels |
 
 ---
 
@@ -284,17 +333,23 @@ url-shortener/
 ├── app/
 │   ├── Console/Commands/
 │   │   └── PruneExpiredUrls.php         # Scheduled cleanup command
+│   ├── Events/
+│   │   └── ClickRecorded.php            # Broadcastable event
 │   ├── Http/
 │   │   ├── Controllers/
-│   │   │   ├── Api/                     # AuthController, UrlController, UrlStatsController
+│   │   │   ├── Api/
+│   │   │   │   ├── AuthController.php
+│   │   │   │   ├── QrCodeController.php
+│   │   │   │   ├── UrlController.php
+│   │   │   │   └── UrlStatsController.php
 │   │   │   └── RedirectController.php
 │   │   ├── Middleware/
-│   │   │   └── SecurityHeaders.php      # CSP, HSTS, Permissions-Policy
-│   │   ├── Requests/                    # Form request validation
+│   │   │   └── SecurityHeaders.php
+│   │   ├── Requests/
 │   │   └── Resources/
 │   │       └── UrlResource.php
 │   ├── Jobs/
-│   │   └── RecordClick.php              # Queued click recording
+│   │   └── RecordClick.php              # Queued click + broadcast
 │   ├── Models/                          # Url, Click, User
 │   ├── OpenApi/                         # Swagger annotations
 │   ├── Policies/
@@ -303,40 +358,43 @@ url-shortener/
 │   │   └── AppServiceProvider.php       # 5 named rate limiters
 │   └── Services/
 │       ├── AnalyticsService.php         # UA parsing + click logging
+│       ├── QrCodeService.php            # Cached QR generation
 │       ├── ShortCodeGenerator.php
 │       └── UrlService.php               # Cached resolution
 ├── bootstrap/
 │   └── app.php                          # Middleware + routing + exception logging
 ├── config/
-│   └── l5-swagger.php
+│   ├── l5-swagger.php
+│   ├── reverb.php
+│   └── broadcasting.php
 ├── database/
 │   ├── factories/                       # UserFactory, UrlFactory, ClickFactory
 │   └── migrations/                      # users, urls, clicks, tokens
 ├── docker/
-│   ├── nginx/default.conf               # Static + PHP-FPM proxy
+│   ├── nginx/default.conf               # Static + PHP-FPM + WebSocket proxy
 │   └── php/
-│       ├── entrypoint.sh                # Redis wait, cache clear, migrations
+│       ├── entrypoint.sh
 │       ├── opcache.ini
 │       ├── php.ini
 │       └── www.conf
 ├── routes/
 │   ├── api.php                          # /api/v1 endpoints
 │   ├── web.php                          # /{code} redirect
+│   ├── channels.php                     # WebSocket private channel auth
 │   └── console.php                      # Scheduled tasks
 ├── storage/
 │   └── logs/                            # laravel, clicks, auth, errors
 ├── tests/
-│   ├── Feature/
-│   │   ├── Api/                         # Auth, URLs, ownership, throttling, analytics
-│   │   ├── Console/                     # PruneExpiredUrls
-│   │   ├── Logging/                     # Log channel tests
-│   │   ├── Middleware/                  # SecurityHeaders
-│   │   └── Public/                      # Redirect
-│   └── Pest.php
+│   └── Feature/
+│       ├── Api/                         # Auth, URLs, QR, ownership, throttle, analytics
+│       ├── Console/                     # PruneExpiredUrls
+│       ├── Logging/                     # Log channel tests
+│       ├── Middleware/                  # SecurityHeaders
+│       └── Public/                      # Redirect
 ├── .github/workflows/
-│   ├── tests.yml                        # Runs Pest on push/PR
-│   └── pint.yml                         # Code style check
-├── docker-compose.yml
+│   ├── tests.yml
+│   └── pint.yml
+├── docker-compose.yml                   # 6 services
 ├── Dockerfile                           # Multi-stage Alpine build
 ├── .dockerignore
 ├── .env.example
@@ -357,19 +415,16 @@ docker compose exec app ./vendor/bin/pest
 docker compose exec app ./vendor/bin/pest tests/Feature/Api
 
 # Run a specific file
-docker compose exec app ./vendor/bin/pest tests/Feature/Api/UrlShorteningTest.php
+docker compose exec app ./vendor/bin/pest tests/Feature/Api/QrCodeTest.php
 
 # Run a single test by name
 docker compose exec app ./vendor/bin/pest --filter="throttles login"
-
-# With coverage (requires Xdebug)
-docker compose exec app ./vendor/bin/pest --coverage
 ```
 
 **Current test coverage:**
-- ✅ **61 tests** passing, 1 skipped
-- ✅ **160+ assertions**
-- ✅ 3 CI workflows on every push
+- ✅ **71 tests** passing, 1 skipped
+- ✅ **190+ assertions**
+- ✅ 2 CI workflows on every push
 
 ### What's tested
 
@@ -381,6 +436,7 @@ docker compose exec app ./vendor/bin/pest --coverage
 | `Api/RateLimitingTest` | 429 responses, retry-after headers |
 | `Api/AnalyticsTest` | Click stats, device breakdown |
 | `Api/QueuedAnalyticsTest` | Async job dispatch |
+| `Api/QrCodeTest` | PNG/SVG generation, size clamping, caching |
 | `Public/RedirectTest` | 302 redirects, 404 for expired/inactive |
 | `Console/PruneExpiredUrlsTest` | Cleanup command + cache busting |
 | `Logging/LoggingTest` | Auth, clicks, errors channels |
@@ -388,7 +444,7 @@ docker compose exec app ./vendor/bin/pest --coverage
 
 ---
 
-##  Docker Commands Cheatsheet
+## 🐳 Docker Commands Cheatsheet
 
 ```bash
 # Start / stop the stack
@@ -402,6 +458,7 @@ docker compose build --no-cache app
 docker compose logs -f app
 docker compose logs -f queue
 docker compose logs -f scheduler
+docker compose logs -f reverb
 docker compose logs -f web
 
 # Open a shell in a container
@@ -411,18 +468,20 @@ docker compose exec app sh
 docker compose exec app php artisan migrate
 docker compose exec app php artisan urls:prune-expired --dry-run
 
-# Check health status (5 services)
+# Check health status (6 services)
 docker compose ps
 ```
 
-### Queue & Scheduler
+### Container roles
 
-The stack includes dedicated containers:
+- **`laravel_app`** — PHP-FPM serving HTTP requests
+- **`laravel_web`** — Nginx reverse proxy (port 8080) + WebSocket proxy
+- **`laravel_queue`** — `php artisan queue:work` for background jobs (click analytics + broadcast)
+- **`laravel_scheduler`** — `php artisan schedule:work` for cron tasks (prune expired)
+- **`laravel_reverb`** — WebSocket server on port 6001 for real-time events
+- **`laravel_redis`** — Redis 7 (cache, queue, pub/sub, rate limiter)
 
-- **`laravel_queue`** — runs `php artisan queue:work` for background jobs (click analytics)
-- **`laravel_scheduler`** — runs `php artisan schedule:work` for cron-like tasks (prune expired URLs)
-
-Both restart automatically on failure and have healthchecks.
+All restart automatically and have healthchecks.
 
 ---
 
@@ -435,6 +494,10 @@ Both restart automatically on failure and have healthchecks.
 - [x] **Phase 5** — Custom aliases, expiration, search, filtering, pagination
 - [x] **Phase 6** — Production-grade Docker (multi-stage, healthchecks)
 - [x] **Phase 7** — Queues, tests, CI/CD, scheduled jobs, structured logging, security headers
+- [x] **Phase 8** — QR code generation with Redis caching
+- [x] **Phase 9** — Real-time WebSocket events with Laravel Reverb
+- [ ] **Phase 10** — React SPA frontend (in progress)
+- [ ] **Phase 11** — Production deployment
 
 ### Possible next steps
 
@@ -444,13 +507,12 @@ Both restart automatically on failure and have healthchecks.
 - [ ] Kubernetes manifests
 - [ ] Laravel Horizon for queue monitoring
 - [ ] GeoIP enrichment for clicks
-- [ ] Real-time analytics dashboard
-- [ ] QR code generation
 - [ ] Link password protection
+- [ ] OpenAPI client generation
 
 ---
 
-##  Contributing
+## 🤝 Contributing
 
 Contributions are welcome. Please open an issue or submit a pull request.
 
@@ -468,7 +530,7 @@ docker compose exec app ./vendor/bin/pest
 
 ---
 
-##  License
+## 📄 License
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
@@ -476,9 +538,9 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 <div align="center">
 
-**Built with ❤️ using Laravel, Redis, and Docker**
+**Built with ❤️ using Laravel, Redis, Reverb, and Docker**
 
- If this project helped you, consider giving it a star!
+⭐ If this project helped you, consider giving it a star!
 
 [⬆ Back to top](#-url-shortener-api)
 
