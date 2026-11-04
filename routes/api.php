@@ -38,7 +38,18 @@ Route::prefix('v1')->group(function () {
             Route::get('me', [AuthController::class, 'me'])->name('auth.me');
         });
     });
+    
 
+    Route::get('/debug-headers', function (\Illuminate\Http\Request $request) {
+    return response()->json([
+        'referer' => $request->header('referer'),
+        'origin' => $request->header('origin'),
+        'host' => $request->header('host'),
+        'stateful' => config('sanctum.stateful'),
+        'from_frontend' => \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::fromFrontend($request),
+        'cookies' => $request->cookies->all(),
+    ]);
+});
     // ── Public: guest shorten (IP-throttled) ──
     Route::post('urls', [UrlController::class, 'store'])
         ->middleware('throttle:api')

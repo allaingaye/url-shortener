@@ -9,14 +9,29 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
+        cookieDomainRewrite: 'localhost',
+        headers: {
+          Referer: 'http://localhost:5173',
+          Origin: 'http://localhost:5173',
+        },
       },
       '/sanctum': {
         target: 'http://localhost:8080',
         changeOrigin: true,
+        cookieDomainRewrite: 'localhost',
+        headers: {
+          Referer: 'http://localhost:5173',
+          Origin: 'http://localhost:5173',
+        },
       },
       '/broadcasting': {
         target: 'http://localhost:8080',
         changeOrigin: true,
+        cookieDomainRewrite: 'localhost',
+        headers: {
+          Referer: 'http://localhost:5173',
+          Origin: 'http://localhost:5173',
+        },
       },
       '/app': {
         target: 'ws://localhost:8080',

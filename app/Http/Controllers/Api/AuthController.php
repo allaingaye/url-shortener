@@ -10,6 +10,7 @@ use App\Http\Requests\RegisterRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -57,6 +58,10 @@ class AuthController extends Controller
     {
         $user = User::create($request->validated());
 
+        // ── SPA session authentication ──
+        Auth::login($user);
+
+        // ── API token authentication ──
         $token = $user->createToken('api')->plainTextToken;
 
         Log::channel('auth')->info('User registered', [
@@ -118,6 +123,12 @@ class AuthController extends Controller
             ]);
         }
 
+        // ── SPA session authentication ──
+        // Attaches the user to the session so cookie-based auth works
+        Auth::login($user);
+
+        // ── API token authentication ──
+        // For clients that prefer Bearer tokens (curl, mobile, etc.)
         $deviceName = $request->input('device', 'api');
         $token = $user->createToken($deviceName)->plainTextToken;
 
@@ -149,7 +160,13 @@ class AuthController extends Controller
     {
         $userId = $request->user()->id;
 
+        // Revoke current Bearer token if present
         $request->user()->currentAccessToken()?->delete();
+
+        // Log out of the session (SPA cookie auth)
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         Log::channel('auth')->info('User logged out', [
             'user_id' => $userId,
