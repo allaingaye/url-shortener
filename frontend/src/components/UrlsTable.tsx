@@ -1,6 +1,7 @@
 // src/components/UrlsTable.tsx
 
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { Url } from '../types'
 import { useToast } from './Toast'
 
@@ -13,6 +14,7 @@ interface UrlsTableProps {
 
 export function UrlsTable({ urls, loading, onDelete, onToggle }: UrlsTableProps) {
   const { showToast } = useToast()
+  const navigate = useNavigate()
   const [copiedId, setCopiedId] = useState<number | null>(null)
   const [qrUrl, setQrUrl] = useState<Url | null>(null)
   const [deleting, setDeleting] = useState<number | null>(null)
@@ -111,6 +113,19 @@ export function UrlsTable({ urls, loading, onDelete, onToggle }: UrlsTableProps)
                   </div>
 
                   <div className="flex items-center gap-1">
+                    {/* Analytics button — NEW */}
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/dashboard/urls/${url.id}`)}
+                      title="View analytics"
+                      className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-blue-600 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </button>
+
+                    {/* Copy button */}
                     <button
                       type="button"
                       onClick={(e) => {
@@ -132,6 +147,7 @@ export function UrlsTable({ urls, loading, onDelete, onToggle }: UrlsTableProps)
                       )}
                     </button>
 
+                    {/* QR button */}
                     <button
                       type="button"
                       onClick={() => setQrUrl(url)}
@@ -143,6 +159,7 @@ export function UrlsTable({ urls, loading, onDelete, onToggle }: UrlsTableProps)
                       </svg>
                     </button>
 
+                    {/* Toggle button */}
                     <button
                       type="button"
                       onClick={() => handleToggle(url)}
@@ -161,6 +178,7 @@ export function UrlsTable({ urls, loading, onDelete, onToggle }: UrlsTableProps)
                       )}
                     </button>
 
+                    {/* Delete button */}
                     <button
                       type="button"
                       onClick={() => handleDelete(url)}
