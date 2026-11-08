@@ -59,9 +59,11 @@ class AuthController extends Controller
         $user = User::create($request->validated());
 
         // ── SPA session authentication ──
+        // Attach the new user to the session so cookie-based auth works immediately
         Auth::login($user);
 
         // ── API token authentication ──
+        // Return a Bearer token for non-browser clients
         $token = $user->createToken('api')->plainTextToken;
 
         Log::channel('auth')->info('User registered', [
@@ -160,13 +162,16 @@ class AuthController extends Controller
     {
         $userId = $request->user()->id;
 
-        // Revoke current Bearer token if present
+        // Revoke current Bearer token (if present)
         $request->user()->currentAccessToken()?->delete();
 
-        // Log out of the session (SPA cookie auth)
-        Auth::guard('web')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        // Log out of the session — only when a session exists.
+        // Bearer-token requests have no session, so we guard this.
+        if ($request->hasSession()) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
 
         Log::channel('auth')->info('User logged out', [
             'user_id' => $userId,
