@@ -6,7 +6,9 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\QrCodeController;
 use App\Http\Controllers\Api\UrlController;
 use App\Http\Controllers\Api\UrlStatsController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 /*
 |--------------------------------------------------------------------------
@@ -38,18 +40,17 @@ Route::prefix('v1')->group(function () {
             Route::get('me', [AuthController::class, 'me'])->name('auth.me');
         });
     });
-    
 
-    Route::get('/debug-headers', function (\Illuminate\Http\Request $request) {
-    return response()->json([
-        'referer' => $request->header('referer'),
-        'origin' => $request->header('origin'),
-        'host' => $request->header('host'),
-        'stateful' => config('sanctum.stateful'),
-        'from_frontend' => \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::fromFrontend($request),
-        'cookies' => $request->cookies->all(),
-    ]);
-});
+    Route::get('/debug-headers', function (Request $request) {
+        return response()->json([
+            'referer' => $request->header('referer'),
+            'origin' => $request->header('origin'),
+            'host' => $request->header('host'),
+            'stateful' => config('sanctum.stateful'),
+            'from_frontend' => EnsureFrontendRequestsAreStateful::fromFrontend($request),
+            'cookies' => $request->cookies->all(),
+        ]);
+    });
     // ── Public: guest shorten (IP-throttled) ──
     Route::post('urls', [UrlController::class, 'store'])
         ->middleware('throttle:api')
