@@ -1,6 +1,6 @@
 // src/pages/Dashboard.tsx
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useUrls } from '../hooks/useUrls'
 import { useLiveClicks } from '../hooks/useLiveClicks'
@@ -13,13 +13,20 @@ export function Dashboard() {
   const { urls, loading, create, remove, toggle, incrementClicks } = useUrls()
   const { clicks, isConnected } = useLiveClicks(user?.id ?? null)
 
-  // Bump the counter when a new click arrives
+  // Track the last processed click ID to avoid duplicate increments on re-render
+  const lastClickId = useRef<number | null>(null)
+
   useEffect(() => {
     if (clicks.length === 0) return
+
     const latest = clicks[0]
-    if (latest?.url_id) {
-      incrementClicks(latest.url_id)
-    }
+    if (!latest?.url_id) return
+
+    // Skip if we already processed this click
+    if (lastClickId.current === latest.click_id) return
+    lastClickId.current = latest.click_id
+
+    incrementClicks(latest.url_id)
   }, [clicks, incrementClicks])
 
   return (
@@ -33,7 +40,11 @@ export function Dashboard() {
           <p className="text-gray-500 mt-1">Here's what's happening with your links.</p>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-gray-200">
-          <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+          <span
+            className={`w-2 h-2 rounded-full ${
+              isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'
+            }`}
+          />
           <span className="text-sm text-gray-600">
             {isConnected ? 'Live' : 'Connecting...'}
           </span>

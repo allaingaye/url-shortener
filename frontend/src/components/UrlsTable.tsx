@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { Url } from '../types'
+import { useToast } from './Toast'
 
 interface UrlsTableProps {
   urls: Url[]
@@ -11,6 +12,7 @@ interface UrlsTableProps {
 }
 
 export function UrlsTable({ urls, loading, onDelete, onToggle }: UrlsTableProps) {
+  const { showToast } = useToast()
   const [copiedId, setCopiedId] = useState<number | null>(null)
   const [qrUrl, setQrUrl] = useState<Url | null>(null)
   const [deleting, setDeleting] = useState<number | null>(null)
@@ -19,9 +21,10 @@ export function UrlsTable({ urls, loading, onDelete, onToggle }: UrlsTableProps)
     try {
       await navigator.clipboard.writeText(url.short_url)
       setCopiedId(url.id)
+      showToast('URL copied to clipboard', 'success')
       setTimeout(() => setCopiedId(null), 2000)
     } catch (err) {
-      console.error('Failed to copy:', err)
+      showToast('Failed to copy URL', 'error')
     }
   }
 
@@ -30,8 +33,20 @@ export function UrlsTable({ urls, loading, onDelete, onToggle }: UrlsTableProps)
     setDeleting(url.id)
     try {
       await onDelete(url.id)
+      showToast('URL deleted', 'success')
+    } catch (err) {
+      showToast('Failed to delete URL', 'error')
     } finally {
       setDeleting(null)
+    }
+  }
+
+  async function handleToggle(url: Url) {
+    try {
+      await onToggle(url.id, !url.is_active)
+      showToast(url.is_active ? 'URL deactivated' : 'URL activated', 'success')
+    } catch (err) {
+      showToast('Failed to update URL', 'error')
     }
   }
 
@@ -75,7 +90,7 @@ export function UrlsTable({ urls, loading, onDelete, onToggle }: UrlsTableProps)
                     <a
                       href={url.short_url}
                       target="_blank"
-                      rel="noopener noreferrer"
+                      rel="nofollow noopener noreferrer"
                       className="font-mono text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline truncate"
                     >
                       /{url.public_code}
@@ -97,7 +112,12 @@ export function UrlsTable({ urls, loading, onDelete, onToggle }: UrlsTableProps)
 
                   <div className="flex items-center gap-1">
                     <button
-                      onClick={() => copyToClipboard(url)}
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        copyToClipboard(url)
+                      }}
                       title="Copy to clipboard"
                       className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-blue-600 transition-colors"
                     >
@@ -113,6 +133,7 @@ export function UrlsTable({ urls, loading, onDelete, onToggle }: UrlsTableProps)
                     </button>
 
                     <button
+                      type="button"
                       onClick={() => setQrUrl(url)}
                       title="Show QR code"
                       className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-blue-600 transition-colors"
@@ -123,7 +144,8 @@ export function UrlsTable({ urls, loading, onDelete, onToggle }: UrlsTableProps)
                     </button>
 
                     <button
-                      onClick={() => onToggle(url.id, !url.is_active)}
+                      type="button"
+                      onClick={() => handleToggle(url)}
                       title={url.is_active ? 'Deactivate' : 'Activate'}
                       className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-yellow-600 transition-colors"
                     >
@@ -140,6 +162,7 @@ export function UrlsTable({ urls, loading, onDelete, onToggle }: UrlsTableProps)
                     </button>
 
                     <button
+                      type="button"
                       onClick={() => handleDelete(url)}
                       disabled={deleting === url.id}
                       title="Delete"
@@ -170,6 +193,7 @@ export function UrlsTable({ urls, loading, onDelete, onToggle }: UrlsTableProps)
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">QR Code</h3>
               <button
+                type="button"
                 onClick={() => setQrUrl(null)}
                 className="p-1 rounded-lg hover:bg-gray-100 text-gray-500"
               >

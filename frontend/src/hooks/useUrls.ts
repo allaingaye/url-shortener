@@ -28,13 +28,9 @@ export function useUrls() {
   }, [refresh])
 
   async function create(originalUrl: string, customAlias?: string) {
-    try {
-      const newUrl = await urlsApi.createUrl(originalUrl, customAlias)
-      setUrls((prev) => [newUrl, ...prev])
-      return newUrl
-    } catch (err) {
-      throw err
-    }
+    const newUrl = await urlsApi.createUrl(originalUrl, customAlias)
+    setUrls((prev) => [newUrl, ...prev])
+    return newUrl
   }
 
   async function remove(id: number) {
@@ -49,14 +45,15 @@ export function useUrls() {
 
   /**
    * Increment the click counter for a URL (for real-time updates).
+   * Wrapped in useCallback so its reference is stable across renders.
    */
-  function incrementClicks(id: number) {
+  const incrementClicks = useCallback((id: number) => {
     setUrls((prev) =>
       prev.map((u) =>
         u.id === id ? { ...u, clicks_count: u.clicks_count + 1 } : u
       )
     )
-  }
+  }, [])
 
   return { urls, loading, error, refresh, create, remove, toggle, incrementClicks }
 }
