@@ -30,13 +30,13 @@ Built with **Laravel 13** · **React 18** · **TypeScript** · **Redis 7** · **
 <tr>
 <td width="50%" valign="top">
 
-### 🔗 Core
+###  Core
 - URL shortening with **7-character codes** (62⁷ ≈ 3.5 trillion combinations)
 - **Custom aliases** with reserved-word protection
 - **URL expiration** — auto-disable after a date
 - **Activation toggle** — pause without deleting
 
-### 📊 Analytics
+###  Analytics
 - Click tracking with **device**, **browser**, **platform**, **referrer**
 - **Aggregated stats**: total clicks, unique visitors, top referrers
 - **Per-URL analytics** page with Chart.js visualizations
@@ -46,7 +46,7 @@ Built with **Laravel 13** · **React 18** · **TypeScript** · **Redis 7** · **
 </td>
 <td width="50%" valign="top">
 
-### 📱 QR Codes
+###  QR Codes
 - **PNG and SVG** output
 - **Configurable size** (64–1024 px)
 - **Redis-cached** for sub-millisecond repeat access
