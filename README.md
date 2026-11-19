@@ -52,7 +52,7 @@ Built with **Laravel 13** · **React 18** · **TypeScript** · **Redis 7** · **
 - **Redis-cached** for sub-millisecond repeat access
 - **Download button** in dashboard modal
 
-### ⚡ Real-Time
+###  Real-Time
 - **Laravel Reverb** WebSocket server
 - **`ClickRecorded` broadcast event** on private user channel
 - **Live click counter** updates in dashboard without refresh
@@ -63,7 +63,7 @@ Built with **Laravel 13** · **React 18** · **TypeScript** · **Redis 7** · **
 <tr>
 <td width="50%" valign="top">
 
-### 🎨 Frontend (React 18 + TypeScript)
+###  Frontend (React 18 + TypeScript)
 - **Modern SaaS dashboard** with blue gradient sidebar
 - **Login/Register** pages with error handling
 - **Dashboard** with stats cards, create form, and URLs table
@@ -76,14 +76,14 @@ Built with **Laravel 13** · **React 18** · **TypeScript** · **Redis 7** · **
 </td>
 <td width="50%" valign="top">
 
-### 🔐 Security
+###  Security
 - **Sanctum** authentication (Bearer tokens + SPA cookies)
 - **Ownership policies** — users manage only their own URLs
 - **Redis-backed rate limiting** with 5 named limiters
 - **SecurityHeaders middleware** (CSP, HSTS, Permissions-Policy)
 - **Fast `/up`** health endpoint (0.007s response)
 
-### 🛠 DevOps
+###  DevOps
 - **Multi-stage Docker build** (~95 MB backend image)
 - **7 containers** — app, web, queue, scheduler, reverb, redis, frontend
 - **Healthchecks** on all containers
@@ -97,7 +97,7 @@ Built with **Laravel 13** · **React 18** · **TypeScript** · **Redis 7** · **
 
 ---
 
-## 🛠 Tech Stack
+##  Tech Stack
 
 <div align="center">
 
@@ -136,7 +136,7 @@ Built with **Laravel 13** · **React 18** · **TypeScript** · **Redis 7** · **
 
 ---
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 
