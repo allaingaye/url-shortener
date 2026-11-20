@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🔗 URL Shortener
+#  URL Shortener
 
 **A full-stack URL shortener with real-time analytics, QR codes, and a modern React dashboard.**
 
@@ -24,7 +24,7 @@ Built with **Laravel 13** · **React 18** · **TypeScript** · **Redis 7** · **
 
 ---
 
-## ✨ Features
+##  Features
 
 <table>
 <tr>
@@ -199,12 +199,12 @@ open http://localhost:5173
 
 | Service | URL |
 |:--------|:----|
-| 🚀 **API** | http://localhost:8080/api/v1 |
-| 📖 **Swagger UI** | http://localhost:8080/api/documentation |
-| 💚 **Health check** | http://localhost:8080/up |
-| 🎨 **Frontend (dev)** | http://localhost:5173 |
-| 🎨 **Frontend (Docker)** | http://localhost:3000 |
-| 🔌 **Reverb WebSocket** | ws://localhost:8080/app/{key} |
+|  **API** | http://localhost:8080/api/v1 |
+|  **Swagger UI** | http://localhost:8080/api/documentation |
+|  **Health check** | http://localhost:8080/up |
+|  **Frontend (dev)** | http://localhost:5173 |
+|  **Frontend (Docker)** | http://localhost:3000 |
+|  **Reverb WebSocket** | ws://localhost:8080/app/{key} |
 
 > ⚠️ **Important:** Always run Composer commands **inside** the backend container:
 > ```bash
